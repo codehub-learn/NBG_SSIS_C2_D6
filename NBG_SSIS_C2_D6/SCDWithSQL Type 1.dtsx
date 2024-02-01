@@ -1,0 +1,206 @@
+﻿<?xml version="1.0"?>
+<DTS:Executable xmlns:DTS="www.microsoft.com/SqlServer/Dts"
+  DTS:refId="Package"
+  DTS:CreationDate="2/1/2024 11:07:47 AM"
+  DTS:CreationName="Microsoft.Package"
+  DTS:CreatorComputerName="DESK"
+  DTS:CreatorName="DESK\Stan"
+  DTS:DTSID="{6888201B-E613-4B23-9694-6EE6E38EC707}"
+  DTS:ExecutableType="Microsoft.Package"
+  DTS:LastModifiedProductVersion="16.0.5314.0"
+  DTS:LocaleID="1032"
+  DTS:ObjectName="SCDWithSQL Type 1"
+  DTS:PackageType="5"
+  DTS:VersionBuild="11"
+  DTS:VersionGUID="{8D7061B4-612D-4A23-80C4-F3D7A92866A0}">
+  <DTS:Property
+    DTS:Name="PackageFormatVersion">8</DTS:Property>
+  <DTS:ConnectionManagers>
+    <DTS:ConnectionManager
+      DTS:refId="Package.ConnectionManagers[DESK.AdventureWorksDW2019]"
+      DTS:CreationName="OLEDB"
+      DTS:DTSID="{46BB1441-26FF-4D06-AA6D-5A1F449BBB6B}"
+      DTS:ObjectName="DESK.AdventureWorksDW2019">
+      <DTS:ObjectData>
+        <DTS:ConnectionManager
+          DTS:ConnectRetryCount="1"
+          DTS:ConnectRetryInterval="5"
+          DTS:ConnectionString="Data Source=DESK;Initial Catalog=AdventureWorksDW2019;Provider=SQLOLEDB.1;Integrated Security=SSPI;Application Name=SSIS-SCDWithSQL-{46BB1441-26FF-4D06-AA6D-5A1F449BBB6B}DESK.AdventureWorksDW2019;Auto Translate=False;" />
+      </DTS:ObjectData>
+    </DTS:ConnectionManager>
+  </DTS:ConnectionManagers>
+  <DTS:Variables />
+  <DTS:Executables>
+    <DTS:Executable
+      DTS:refId="Package\Create Target Table"
+      DTS:CreationName="Microsoft.ExecuteSQLTask"
+      DTS:Description="Execute SQL Task"
+      DTS:DTSID="{66784752-BD9F-41CD-901C-920ADFE36E54}"
+      DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="Create Target Table"
+      DTS:TaskContact="Execute SQL Task; Microsoft Corporation; SQL Server 2022; © 2022 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
+      DTS:ThreadHint="0">
+      <DTS:Variables />
+      <DTS:ObjectData>
+        <SQLTask:SqlTaskData
+          SQLTask:Connection="{46BB1441-26FF-4D06-AA6D-5A1F449BBB6B}"
+          SQLTask:SqlStatementSource="if not exists (select * from sysobjects where name ='scd_target' and xtype = 'u')&#xA;create table SCD_Target (&#xA;    id INT,&#xA;    first_name VARCHAR(50),&#xA;    last_name VARCHAR(50),&#xA;    email VARCHAR(50),&#xA;    phone VARCHAR(50),&#xA;    rowstartdate DATETIME2,&#xA;    rowenddate DATETIME2,&#xA;    rowiscurrent CHAR(1)&#xA;);&#xA;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+      </DTS:ObjectData>
+    </DTS:Executable>
+    <DTS:Executable
+      DTS:refId="Package\Insert New Rows"
+      DTS:CreationName="Microsoft.ExecuteSQLTask"
+      DTS:Description="Execute SQL Task"
+      DTS:DTSID="{6FF1D204-157F-4612-BFC9-2F94A10B0BFF}"
+      DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="Insert New Rows"
+      DTS:TaskContact="Execute SQL Task; Microsoft Corporation; SQL Server 2022; © 2022 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
+      DTS:ThreadHint="1">
+      <DTS:Variables />
+      <DTS:ObjectData>
+        <SQLTask:SqlTaskData
+          SQLTask:Connection="{46BB1441-26FF-4D06-AA6D-5A1F449BBB6B}"
+          SQLTask:SqlStatementSource="INSERT INTO SCD_Target (id, first_name, last_name, email, phone, rowstartdate, rowenddate, rowiscurrent)&#xA;SELECT s.id, s.first_name, s.last_name, s.email, s.phone, GETDATE(), NULL, 'Y' FROM SCD_Source s&#xA;LEFT JOIN SCD_Target t&#xA;ON s.id = t.id&#xA;WHERE t.id IS NULL;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+      </DTS:ObjectData>
+    </DTS:Executable>
+    <DTS:Executable
+      DTS:refId="Package\Update Changed Rows"
+      DTS:CreationName="Microsoft.ExecuteSQLTask"
+      DTS:Description="Execute SQL Task"
+      DTS:DTSID="{E8B7E153-B42D-4290-9ED0-8C0B7ACC32C3}"
+      DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="Update Changed Rows"
+      DTS:TaskContact="Execute SQL Task; Microsoft Corporation; SQL Server 2022; © 2022 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
+      DTS:ThreadHint="0">
+      <DTS:Variables />
+      <DTS:ObjectData>
+        <SQLTask:SqlTaskData
+          SQLTask:Connection="{46BB1441-26FF-4D06-AA6D-5A1F449BBB6B}"
+          SQLTask:SqlStatementSource="UPDATE SCD_Target&#xA;SET first_name = s.first_name, last_name = s.last_name&#xA;FROM SCD_Source s&#xA;INNER JOIN SCD_Target t&#xA;ON s.id = t.id&#xA;WHERE&#xA;t.rowiscurrent = 'Y'&#xA;AND&#xA;(&#xA;s.first_name &lt;&gt; t.first_name&#xA;OR&#xA;s.last_name &lt;&gt; t.last_name&#xA;);&#xA;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+      </DTS:ObjectData>
+    </DTS:Executable>
+  </DTS:Executables>
+  <DTS:PrecedenceConstraints>
+    <DTS:PrecedenceConstraint
+      DTS:refId="Package.PrecedenceConstraints[Constraint]"
+      DTS:CreationName=""
+      DTS:DTSID="{44BE1124-E77D-4694-A267-DD573597B7E5}"
+      DTS:From="Package\Create Target Table"
+      DTS:LogicalAnd="True"
+      DTS:ObjectName="Constraint"
+      DTS:To="Package\Insert New Rows"
+      DTS:Value="2" />
+    <DTS:PrecedenceConstraint
+      DTS:refId="Package.PrecedenceConstraints[Constraint 1]"
+      DTS:CreationName=""
+      DTS:DTSID="{93B5B6C1-3AEE-4975-9708-404BD0D94949}"
+      DTS:From="Package\Create Target Table"
+      DTS:LogicalAnd="True"
+      DTS:ObjectName="Constraint 1"
+      DTS:To="Package\Update Changed Rows"
+      DTS:Value="2" />
+  </DTS:PrecedenceConstraints>
+  <DTS:DesignTimeProperties><![CDATA[<?xml version="1.0"?>
+<!--This CDATA section contains the layout information of the package. The section includes information such as (x,y) coordinates, width, and height.-->
+<!--If you manually edit this section and make a mistake, you can delete it. -->
+<!--The package will still be able to load normally but the previous layout information will be lost and the designer will automatically re-arrange the elements on the design surface.-->
+<Objects
+  Version="8">
+  <!--Each node below will contain properties that do not affect runtime behavior.-->
+  <Package
+    design-time-name="Package">
+    <LayoutInfo>
+      <GraphLayout
+        Capacity="8" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
+        <NodeLayout
+          Size="172,41.6"
+          Id="Package\Create Target Table"
+          TopLeft="227.857143342191,55.8235293628332" />
+        <NodeLayout
+          Size="158.4,41.6"
+          Id="Package\Insert New Rows"
+          TopLeft="113.571428813193,144.52941163802" />
+        <NodeLayout
+          Size="184.8,41.6"
+          Id="Package\Update Changed Rows"
+          TopLeft="366.428572208602,149.117646928116" />
+        <EdgeLayout
+          Id="Package.PrecedenceConstraints[Constraint]"
+          TopLeft="286.523810008858,97.4235293628332">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="-93.752381195665,47.1058822751868"
+              Start="0,0"
+              End="-93.752381195665,39.6058822751868">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,15.1028462682785" />
+                  <mssgle:CubicBezierSegment
+                    Point1="0,15.1028462682785"
+                    Point2="0,19.1028462682785"
+                    Point3="-4,19.1028462682785" />
+                  <mssgle:LineSegment
+                    End="-89.752381195665,19.1028462682785" />
+                  <mssgle:CubicBezierSegment
+                    Point1="-89.752381195665,19.1028462682785"
+                    Point2="-93.752381195665,19.1028462682785"
+                    Point3="-93.752381195665,23.1028462682785" />
+                  <mssgle:LineSegment
+                    End="-93.752381195665,39.6058822751868" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <mssgm:EdgeLabel
+              BoundingBox="-72.1806437228325,24.1028462682785,50.60890625,11.609375"
+              RelativePosition="Any" />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package.PrecedenceConstraints[Constraint 1]"
+          TopLeft="341.190476675524,97.4235293628332">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="117.638095533078,51.6941175652828"
+              Start="0,0"
+              End="117.638095533078,44.1941175652828">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,16.9635131140317" />
+                  <mssgle:CubicBezierSegment
+                    Point1="0,16.9635131140317"
+                    Point2="0,20.9635131140317"
+                    Point3="4,20.9635131140317" />
+                  <mssgle:LineSegment
+                    End="113.638095533078,20.9635131140317" />
+                  <mssgle:CubicBezierSegment
+                    Point1="113.638095533078,20.9635131140317"
+                    Point2="117.638095533078,20.9635131140317"
+                    Point3="117.638095533078,24.9635131140317" />
+                  <mssgle:LineSegment
+                    End="117.638095533078,44.1941175652828" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <mssgm:EdgeLabel
+              BoundingBox="33.5145946415389,25.9635131140317,50.60890625,11.609375"
+              RelativePosition="Any" />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+      </GraphLayout>
+    </LayoutInfo>
+  </Package>
+</Objects>]]></DTS:DesignTimeProperties>
+</DTS:Executable>
